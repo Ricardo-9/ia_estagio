@@ -18,16 +18,16 @@ export async function POST(req: NextRequest) {
       content: message,
     })
 
-    // 2. Buscar preferências do usuário
-    const { data: preferences, error: prefError } = await supabase
-      .from('user_preferences')
-      .select('focus, goals')
+    // 2. Buscar perfil completo do usuário
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('*')
       .eq('user_id', user_id)
       .single()
 
-    if (prefError) {
-      console.warn('Erro ao buscar preferências do usuário:', prefError.message)
-      // Podemos continuar mesmo sem preferências, usando só o prompt padrão
+    if (profileError) {
+      console.warn('Erro ao buscar perfil do usuário:', profileError.message)
+      // Continuar mesmo sem perfil, com prompt padrão
     }
 
     // 3. Buscar últimas 100 mensagens do usuário (ordenadas por created_at asc)
@@ -40,12 +40,19 @@ export async function POST(req: NextRequest) {
 
     if (messagesError) throw messagesError
 
-    // 4. Montar prompt para IA
-    const systemPromptBase = 'Você é um coach pessoal que ajuda o usuário a manter o foco nas metas de saúde, produtividade e aprendizado.'
+    // 4. Montar prompt para IA incluindo perfil personalizado
+    const systemPromptBase = `Você é um coach pessoal que ajuda o usuário a manter o foco nas metas de saúde, produtividade e aprendizado.`
 
-    // Adicionar preferências se existirem
-    const systemPrompt = preferences
-      ? `${systemPromptBase} O foco principal do usuário é: ${preferences.focus}. As metas definidas são: ${preferences.goals || 'nenhuma meta definida'}.`
+    const systemPrompt = profile
+      ? `${systemPromptBase}
+Usuário:
+- Idade: ${profile.age ?? 'não informado'}
+- Peso: ${profile.weight ?? 'não informado'}
+- Sexo: ${profile.gender ?? 'não informado'}
+- Estuda: ${profile.is_student ? 'Sim' : 'Não'}
+- Preferências: ${profile.preferences?.join(', ') ?? 'não informado'}
+- Metas: ${profile.goals ?? 'nenhuma meta definida'}
+Seja empático e personalize as respostas com base nessas informações.`
       : systemPromptBase
 
     const messagesForAI = [
