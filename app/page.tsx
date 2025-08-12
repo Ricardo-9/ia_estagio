@@ -42,7 +42,7 @@ export default function HomePage() {
     }
 
     checkSession()
-  }, [router])
+ }, [router])
 
   return (
     <div
@@ -76,11 +76,6 @@ export default function HomePage() {
             className="py-3 border-b-2 border-[#333333] focus:outline-none focus:border-gray-600 placeholder-[#333333] placeholder:font-bold bg-transparent text-[#333333]"
           />
         </div>
-
-        
-
-        
-
         <br />
 
         <button

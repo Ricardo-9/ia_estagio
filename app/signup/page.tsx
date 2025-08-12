@@ -52,7 +52,7 @@ export default function SignupEmailPage() {
   }, [router])
 
   return (
-    <div className="h-screen bg-cover bg-center" style={{ backgroundImage: "url('/bgclaro2.png')" }}>
+    <div className="h-screen bg-cover bg-center">
       <div className="flex flex-col space-y-4 w-full max-w-sm mx-auto py-34">
         <div>
           <p className="text-7xl font-bold text-[#3a2e2e] whitespace-nowrap -ml-21 py-15 ">Create Account</p>

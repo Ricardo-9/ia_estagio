@@ -18,27 +18,42 @@ export async function POST(req: NextRequest) {
       content: message,
     })
 
-    // 2. Buscar últimas 10 mensagens do usuário (ordenadas por created_at asc)
-    const { data: messages, error } = await supabase
+    // 2. Buscar preferências do usuário
+    const { data: preferences, error: prefError } = await supabase
+      .from('user_preferences')
+      .select('focus, goals')
+      .eq('user_id', user_id)
+      .single()
+
+    if (prefError) {
+      console.warn('Erro ao buscar preferências do usuário:', prefError.message)
+      // Podemos continuar mesmo sem preferências, usando só o prompt padrão
+    }
+
+    // 3. Buscar últimas 100 mensagens do usuário (ordenadas por created_at asc)
+    const { data: messages, error: messagesError } = await supabase
       .from('messages')
       .select('role, content')
       .eq('user_id', user_id)
       .order('created_at', { ascending: true })
       .limit(100)
 
-    if (error) throw error
+    if (messagesError) throw messagesError
 
-    // 3. Montar prompt para IA, incluindo system prompt fixo e histórico
+    // 4. Montar prompt para IA
+    const systemPromptBase = 'Você é um coach pessoal que ajuda o usuário a manter o foco nas metas de saúde, produtividade e aprendizado.'
+
+    // Adicionar preferências se existirem
+    const systemPrompt = preferences
+      ? `${systemPromptBase} O foco principal do usuário é: ${preferences.focus}. As metas definidas são: ${preferences.goals || 'nenhuma meta definida'}.`
+      : systemPromptBase
+
     const messagesForAI = [
-      {
-        role: 'system',
-        content:
-          'Você é um coach pessoal que ajuda o usuário a manter o foco nas metas de saúde, produtividade e aprendizado.',
-      },
+      { role: 'system', content: systemPrompt },
       ...messages,
     ]
 
-    // 4. Chamar a IA via OpenRouter API (Llama 3)
+    // 5. Chamar a IA via OpenRouter API (Llama 3)
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -56,17 +71,17 @@ export async function POST(req: NextRequest) {
 
     const reply = data.choices?.[0]?.message?.content ?? 'Desculpe, não consegui gerar uma resposta.'
 
-    // 5. Salvar resposta da IA no banco
+    // 6. Salvar resposta da IA no banco
     await supabase.from('messages').insert({
       user_id,
       role: 'assistant',
       content: reply,
     })
 
-    // 6. Retornar resposta para o frontend
+    // 7. Retornar resposta para o frontend
     return NextResponse.json({ reply })
   } catch (error: any) {
     console.error(error)
-    return NextResponse.json({ error: error.message || 'Intern Error' }, { status: 500 })
+    return NextResponse.json({ error: error.message || 'Internal Error' }, { status: 500 })
   }
 }
