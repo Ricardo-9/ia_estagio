@@ -11,14 +11,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Mensagem ou usuário faltando' }, { status: 400 })
     }
 
-    // 1. Salvar mensagem do usuário no banco
+    
     await supabase.from('messages').insert({
       user_id,
       role: 'user',
       content: message,
     })
 
-    // 2. Buscar perfil completo do usuário
+  
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
@@ -27,10 +27,10 @@ export async function POST(req: NextRequest) {
 
     if (profileError) {
       console.warn('Erro ao buscar perfil do usuário:', profileError.message)
-      // Continuar mesmo sem perfil, com prompt padrão
+      
     }
 
-    // 3. Buscar últimas 100 mensagens do usuário (ordenadas por created_at asc)
+   
     const { data: messages, error: messagesError } = await supabase
       .from('messages')
       .select('role, content')
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
 
     if (messagesError) throw messagesError
 
-    // 4. Montar prompt para IA incluindo perfil personalizado
-    const systemPromptBase = `Você é um coach pessoal que ajuda o usuário a manter o foco nas metas de saúde, produtividade e aprendizado.`
+   
+    const systemPromptBase = `Você é um coach pessoal que ajuda o usuário, focando em gerenciamento diário, planos de treino, estudo e etc.Mas pode ir ajudando o usuario conforme a necessidade dele`
 
     const systemPrompt = profile
       ? `${systemPromptBase}
@@ -60,7 +60,7 @@ Seja empático e personalize as respostas com base nessas informações.`
       ...messages,
     ]
 
-    // 5. Chamar a IA via OpenRouter API (Llama 3)
+   
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -78,14 +78,14 @@ Seja empático e personalize as respostas com base nessas informações.`
 
     const reply = data.choices?.[0]?.message?.content ?? 'Desculpe, não consegui gerar uma resposta.'
 
-    // 6. Salvar resposta da IA no banco
+    
     await supabase.from('messages').insert({
       user_id,
       role: 'assistant',
       content: reply,
     })
 
-    // 7. Retornar resposta para o frontend
+   
     return NextResponse.json({ reply })
   } catch (error: any) {
     console.error(error)

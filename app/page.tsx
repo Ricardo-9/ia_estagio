@@ -1,34 +1,28 @@
 'use client'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { FaEnvelope, FaLock } from 'react-icons/fa'
+import RobotAvatar from './components/RobotAvatar'
 export default function HomePage() {
   const router = useRouter()
-    const redirectToSignup = () => router.replace('/signup')
- 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
 
   const handleLogin = async () => {
-    if (!email.trim()) {
-      setMessage('Please enter your email.')
-      return
-    }
-    if (!password.trim()) {
-      setMessage('Please enter your password.')
+    if (!email.trim() || !password.trim()) {
+      setMessage({ text: 'Preencha email e senha.', error: true })
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setMessage(`Error: ${error.message}`)
+      setMessage({ text: `Erro: ${error.message}`, error: true })
     } else {
-      setMessage('Success!')
+      setMessage({ text: 'Login realizado com sucesso!', error: false })
       router.replace('/chat')
     }
   }
@@ -36,68 +30,80 @@ export default function HomePage() {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
-      if (data.session) {
-        router.replace('/chat')
-      }
+      if (data.session) router.replace('/chat')
     }
-
     checkSession()
- }, [router])
-
+  }, [router])
+//onClick={() => router.replace('/signup')}
   return (
     <div
       className="h-screen bg-cover bg-center relative"
-      style={{ backgroundImage: "url('/bgclaro2.png')" }}
+      style={{ backgroundImage: "url('/bgescuro2.png')" }}
     >
-      <div className="flex flex-col space-y-4 w-full max-w-sm mx-auto py-34 z-10 relative">
+      <div className="flex flex-col space-y-4 w-full max-w-sm mx-auto py-44 z-10 relative">
         <div className="">
           <div className="space-x-5 -ml-18">
-            <span className="text-7xl font-bold text-[#3a2e2e]">Welcome</span>
-            <span className="text-7xl font-bold text-[#3a2e2e]">back!</span>
+            <span className="text-7xl font-bold text-white">Welcome</span>
+            <span className="text-7xl font-bold text-white">back!</span>
           </div>
-          <h2 className="text-xl font-medium text-[#5a5a5a] mt-2 ml-12">
-            LOGIN
+          <h2 className="text-xl font-medium text-white mt-2 ml-12">
+            Make your login, start meeting
           </h2>
         </div>
 
-        <div className="text-[#333333] flex flex-col gap-3 mt-6 max-w-sm">
+        <div className="text-white flex flex-col gap-3 mt-6 max-w-sm">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="py-3 border-b-2 border-[#333333] focus:outline-none focus:border-gray-600 placeholder-[#333333] placeholder:font-bold bg-transparent text-[#333333]"
+            className="py-3 border-b-2 border-white focus:outline-none focus:border-gray-600 placeholder-white placeholder:font-bold bg-transparent text-white"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="py-3 border-b-2 border-[#333333] focus:outline-none focus:border-gray-600 placeholder-[#333333] placeholder:font-bold bg-transparent text-[#333333]"
+            className="py-3 border-b-2 border-white focus:outline-none focus:border-gray-600 placeholder-white placeholder:font-bold bg-transparent text-white"
           />
         </div>
+
+        
+
+        
+
         <br />
 
         <button
-          className="bg-[#00bfff] text-white py-3 px-6 rounded-[60px] font-semibold shadow-md hover:bg-[#5ee7ff] transition"
+          className="bg-[#a945c8] text-white py-3 px-6 rounded-[60px] font-semibold shadow-md hover:bg-[#dd70ff] transition"
           onClick={handleLogin}
         >
           Log In
         </button>
+{message && (
+          <p className={`text-center font-semibold ${message.error ? 'text-red-500' : 'text-green-400'}`}>
+            {message.text}
+          </p>
+        )}
 
-
-        {message && <p className="text-center text-sm text-red-500 mt-4">{message}</p>}
+        
+        
       </div>
-      <div className="text-[#5a5a5a] flex justify-center gap-10 mt-6 text-sm font-medium">
+      <div className="text-white flex justify-center gap-10 mt-6 text-[16px] font-medium">
           <a
-            onClick={redirectToSignup}
-            className="cursor-pointer hover:text-[#1d4ed8] transition-colors"
+            onClick={() => router.replace('/signup')}
+            className="cursor-pointer hover:text-[#dadadb] transition-colors font-bold "
           >
             Create an account
           </a>
-          
+          <a
+            className="cursor-pointer hover:text-[#dadadb] transition-colors font-bold"
+          >
+            Forgot Password?
+          </a>
         </div>
-
+         
+      
     </div>
   )
 }

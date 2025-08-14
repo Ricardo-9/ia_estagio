@@ -3,28 +3,21 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { useUserId } from '@/app/hooks/useUserId'
 import { useRouter } from 'next/navigation'
+import { FaUser, FaWeight, FaTransgender, FaUserGraduate, FaBullseye, FaSignOutAlt, FaArrowLeft } from 'react-icons/fa'
 
 export default function UserProfile() {
   const userId = useUserId()
   const router = useRouter()
 
-  // Estado para características pessoais
   const [age, setAge] = useState<number | ''>('')
   const [weight, setWeight] = useState<number | ''>('')
   const [gender, setGender] = useState('')
   const [isStudent, setIsStudent] = useState(false)
-
-  // Estado para preferências (multi-select)
   const [preferences, setPreferences] = useState<string[]>([])
-
-  // Metas / objetivos
   const [goals, setGoals] = useState('')
-
-  // Estados para UI
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null)
 
-  // Opções de preferências para múltipla escolha
   const preferenceOptions = [
     { value: 'saude', label: 'Saúde' },
     { value: 'academia', label: 'Academia' },
@@ -34,7 +27,6 @@ export default function UserProfile() {
     { value: 'lazer', label: 'Lazer' },
   ]
 
-  // Carregar dados do usuário e preferências do backend
   useEffect(() => {
     if (!userId) return
     setLoading(true)
@@ -54,31 +46,21 @@ export default function UserProfile() {
       .finally(() => setLoading(false))
   }, [userId])
 
-  // Salvar dados no backend
   async function saveProfile() {
     if (!userId) {
       setMessage({ text: 'Usuário não autenticado.', error: true })
       return
     }
-
     setLoading(true)
     setMessage(null)
 
     const res = await fetch('/api/userProfile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-id': userId },
-      body: JSON.stringify({
-        age,
-        weight,
-        gender,
-        isStudent,
-        preferences,
-        goals,
-      }),
+      body: JSON.stringify({ age, weight, gender, isStudent, preferences, goals }),
     })
 
     const data = await res.json()
-
     if (res.ok) {
       setMessage({ text: 'Perfil salvo com sucesso!' })
     } else {
@@ -87,13 +69,11 @@ export default function UserProfile() {
     setLoading(false)
   }
 
-  // Função logout
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/')
   }
 
-  // Função para manipular seleção múltipla de preferências
   function togglePreference(pref: string) {
     if (preferences.includes(pref)) {
       setPreferences(preferences.filter((p) => p !== pref))
@@ -103,126 +83,150 @@ export default function UserProfile() {
   }
 
   return (
-    <div style={{ maxWidth: 500, margin: '40px auto', padding: 20, fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ marginBottom: 24 }}>Perfil do Usuário</h1>
+    <div
+      className="min-h-screen w-full flex justify-center items-center py-10 px-4 relative"
+      style={{
+        backgroundImage: "url('/bgescuro2.png')",
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+      }}
+    >
+      
+      <main
+        className="w-full max-w-2xl p-6 rounded-2xl flex flex-col gap-6 text-white shadow-lg"
+        style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.15)',
+          backdropFilter: 'blur(12px)',
+        }}
+      >
+        <h1 className="text-3xl font-bold text-center flex items-center justify-center gap-2">
+          <FaUser /> Meu Perfil
+        </h1>
 
-      <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
-        Idade:
-        <input
-          type="number"
-          min={0}
-          value={age}
-          onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
-          style={{ width: '100%', padding: 8, fontSize: 16, marginTop: 4, marginBottom: 16, borderRadius: 5, border: '1px solid #ccc' }}
-          placeholder="Digite sua idade"
-        />
-      </label>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
+            <label className="font-semibold flex items-center gap-2"> <FaUser /> Idade </label>
+            <input
+              type="number"
+              min={0}
+              value={age}
+              onChange={(e) => setAge(e.target.value === '' ? '' : Number(e.target.value))}
+              placeholder="Digite sua idade"
+              className="w-full px-4 py-2 rounded-xl bg-black/20 border border-white/20 focus:outline-none focus:border-blue-400 placeholder-white/50"
+            />
+          </div>
 
-      <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
-        Peso (kg):
-        <input
-          type="number"
-          min={0}
-          value={weight}
-          onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
-          style={{ width: '100%', padding: 8, fontSize: 16, marginTop: 4, marginBottom: 16, borderRadius: 5, border: '1px solid #ccc' }}
-          placeholder="Digite seu peso"
-        />
-      </label>
+          <div className="flex flex-col">
+            <label className="font-semibold flex items-center gap-2"> <FaWeight /> Peso (kg) </label>
+            <input
+              type="number"
+              min={0}
+              value={weight}
+              onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              placeholder="Digite seu peso"
+              className="w-full px-4 py-2 rounded-xl bg-black/20 border border-white/20 focus:outline-none focus:border-blue-400 placeholder-white/50"
+            />
+          </div>
 
-      <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
-        Sexo:
-        <select
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          style={{ width: '100%', padding: 8, fontSize: 16, marginTop: 4, marginBottom: 16, borderRadius: 5, border: '1px solid #ccc' }}
-        >
-          <option value="">Selecione</option>
-          <option value="masculino">Masculino</option>
-          <option value="feminino">Feminino</option>
-          <option value="outro">Outro</option>
-          <option value="nao_informar">Prefiro não informar</option>
-        </select>
-      </label>
+          <div className="flex flex-col">
+            <label className="font-semibold flex items-center gap-2"> <FaTransgender /> Sexo </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl bg-black/20 border border-white/20 focus:outline-none focus:border-blue-400 placeholder-white/50"
+            >
+              <option value="">Selecione</option>
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+              <option value="outro">Outro</option>
+              <option value="nao_informar">Prefiro não informar</option>
+            </select>
+          </div>
 
-      <label style={{ display: 'block', marginBottom: 16, fontWeight: 'bold' }}>
-        Você estuda?
-        <input
-          type="checkbox"
-          checked={isStudent}
-          onChange={(e) => setIsStudent(e.target.checked)}
-          style={{ marginLeft: 10, transform: 'scale(1.2)' }}
-        />
-      </label>
-
-      <fieldset style={{ marginBottom: 16 }}>
-        <legend style={{ fontWeight: 'bold', marginBottom: 8 }}>Preferências (selecione todas que desejar):</legend>
-        {preferenceOptions.map(({ value, label }) => (
-          <label key={value} style={{ display: 'block', marginBottom: 6, cursor: 'pointer' }}>
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
-              checked={preferences.includes(value)}
-              onChange={() => togglePreference(value)}
-              style={{ marginRight: 8, transform: 'scale(1.2)' }}
+              checked={isStudent}
+              onChange={(e) => setIsStudent(e.target.checked)}
+              className="w-5 h-5"
             />
-            {label}
-          </label>
-        ))}
-      </fieldset>
+            <label className="font-semibold flex items-center gap-2">
+              <FaUserGraduate /> Você estuda?
+            </label>
+          </div>
+        </div>
 
-      <label style={{ display: 'block', marginBottom: 8, fontWeight: 'bold' }}>
-        Metas / Objetivos:
-        <textarea
-          value={goals}
-          onChange={(e) => setGoals(e.target.value)}
-          rows={5}
-          placeholder="Descreva suas metas aqui"
-          style={{ width: '100%', padding: 10, fontSize: 16, borderRadius: 5, border: '1px solid #ccc', resize: 'vertical' }}
-        />
-      </label>
+        <div>
+          <h2 className="font-semibold mb-2">Preferências</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {preferenceOptions.map(({ value, label }) => (
+              <label
+                key={value}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition ${
+                  preferences.includes(value)
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-black/20 border-white/20 text-white'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={preferences.includes(value)}
+                  onChange={() => togglePreference(value)}
+                  className="hidden"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
 
-      <button
-        onClick={saveProfile}
-        disabled={loading}
-        style={{
-          marginTop: 24,
-          width: '100%',
-          padding: 12,
-          fontSize: 16,
-          backgroundColor: loading ? '#999' : '#0070f3',
-          color: 'white',
-          border: 'none',
-          borderRadius: 5,
-          cursor: loading ? 'not-allowed' : 'pointer',
-          fontWeight: 'bold',
-        }}
-      >
-        {loading ? 'Salvando...' : 'Salvar Perfil'}
-      </button>
+        <div className="flex flex-col">
+          <label className="font-semibold flex items-center gap-2"> <FaBullseye /> Metas / Objetivos </label>
+          <textarea
+            value={goals}
+            onChange={(e) => setGoals(e.target.value)}
+            rows={3}
+            placeholder="Descreva suas metas aqui"
+            className="w-full px-4 py-2 rounded-xl bg-black/20 border border-white/20 focus:outline-none focus:border-blue-400 placeholder-white/50"
+          />
+        </div>
 
-      {message && (
-        <p style={{ marginTop: 16, color: message.error ? 'red' : 'green', fontWeight: 'bold' }}>
-          {message.text}
-        </p>
-      )}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={saveProfile}
+            disabled={loading}
+            className={`w-full py-3 rounded-full font-bold shadow-md transition ${
+              loading ? 'bg-gray-500 text-white' : 'bg-[#a945c8] hover:bg-[#7c2199] text-white'
+            }`}
+          >
+            {loading ? 'Salvando...' : 'Salvar Perfil'}
+          </button>
 
-      <button
-        onClick={handleLogout}
-        style={{
-          marginTop: 40,
-          width: '100%',
-          padding: 12,
-          fontSize: 16,
-          backgroundColor: '#e53e3e',
-          color: 'white',
-          border: 'none',
-          borderRadius: 5,
-          cursor: 'pointer',
-          fontWeight: 'bold',
-        }}
-      >
-        Logout
-      </button>
+          
+
+          <button
+            onClick={handleLogout}
+            className="w-full py-3 rounded-full font-bold text-white bg-red-500 hover:bg-red-600 shadow-md flex items-center justify-center gap-2"
+          >
+            <FaSignOutAlt /> Logout
+          </button>
+
+          <button
+            onClick={() => router.push('/chat')}
+            className="w-full py-3 rounded-full font-bold text-white bg-black/20 border border-white/20 hover:bg-black/30 shadow-md flex items-center justify-center gap-2"
+          ><FaArrowLeft />
+             Voltar ao chat
+          </button>
+          {message && (
+            <p className={`text-center font-bold ${message.error ? 'text-red-500' : 'text-green-500'}`}>
+              {message.text}
+            </p>
+          )}
+        </div>
+        
+    
+      </main>
     </div>
   )
 }

@@ -24,3 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* globals.css ou style global do Next.js */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0) inset !important; /* fundo transparente com blur */
+  -webkit-text-fill-color: white !important; /* mantém o texto branco */
+  transition: background-color 5000s ease-in-out 0s; /* evita fundo amarelo do Chrome */
+}
